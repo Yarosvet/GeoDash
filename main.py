@@ -3,7 +3,7 @@ import pygame
 import os
 import sys
 # local
-from level_1 import *
+import level_1
 
 
 def load_image(name, colorkey=None):
@@ -55,13 +55,11 @@ class Sprite(pygame.sprite.Sprite):
 
 size = width, height = 800, 600
 screen = pygame.display.set_mode(size)
-all_sprites = pygame.sprite.Group()
 images = pygame.sprite.Group()
 background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
 play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
 logo = Sprite(images, load_image("logo.png"))
 logo.update(185, 10)
-all_sprites.add(play)
 clck = pygame.time.Clock()
 while True:
     screen.fill((0, 0, 0))
@@ -69,8 +67,13 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit(0)
+        elif event.type == pygame.MOUSEBUTTONUP and event.button in [1, 2]:
+            if play.rect.collidepoint(*event.pos):
+                for spr in images:
+                    spr.kill()
+                level_1.main(screen)
+
     clck.tick(6)
     play.update()
-    all_sprites.draw(screen)
     images.draw(screen)
     pygame.display.flip()
