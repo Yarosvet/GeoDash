@@ -1,8 +1,10 @@
 import pygame
 import os
 
-size = width, height = 800, 600
+size = width, height = 800, 500
 screen = pygame.display.set_mode(size)
+BLOCK_SIZE = 50
+state = 'logo'
 
 
 def load_image(name, colorkey=None):
@@ -50,3 +52,67 @@ class Sprite(pygame.sprite.Sprite):
 
     def update(self, x, y):
         self.rect.x, self.rect.y = (x, y)
+
+
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+
+
+platforms = pygame.sprite.Group()
+DieBlocks = pygame.sprite.Group()
+characters = pygame.sprite.Group()
+character = None
+cam = None
+
+
+def build_level(file_name):
+    global platforms
+    global DieBlocks
+    global character
+    global characters
+    screen.fill((24, 23, 28))
+    pygame.mouse.set_visible(0)
+    file = open(file_name)
+    level_text = file.read().split('\n')
+    file.close()
+    for line_num in range(len(level_text)):
+        line = level_text[line_num]
+        for sym_num in range(len(line)):
+            sym = line[sym_num]
+            if sym == '*':
+                a = None
+                pass
+            elif sym == '^':
+                a = Sprite(DieBlocks, pygame.transform.scale(load_image('Spike.png'), (BLOCK_SIZE, BLOCK_SIZE)))
+            elif sym == '#':
+                a = Sprite(platforms, pygame.transform.scale(load_image('Block.png'), (BLOCK_SIZE, BLOCK_SIZE)))
+            elif sym == '<':
+                a = Sprite(DieBlocks, pygame.transform.scale(load_image('LSpike.png'), (BLOCK_SIZE, BLOCK_SIZE)))
+            elif sym == '_':
+                a = Sprite(platforms, pygame.transform.scale(load_image('Platform.png'), (BLOCK_SIZE, BLOCK_SIZE)))
+            elif sym == '@':
+                a = Sprite(characters, pygame.transform.scale(load_image('Character.png'), (BLOCK_SIZE, BLOCK_SIZE)))
+                character = a
+            try:
+                a.update(sym_num * BLOCK_SIZE, line_num * BLOCK_SIZE)
+            except:
+                pass
+            platforms.draw(screen)
+            DieBlocks.draw(screen)
+            characters.draw(screen)
+    global cam
+    cam = Camera()
+    cam.update(character)
