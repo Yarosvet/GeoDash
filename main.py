@@ -39,7 +39,7 @@ while True:
         define_character()
         character.update(character.rect.x + 1, character.rect.y)
         # cam.apply(character)
-        # characters.draw(screen)
+        characters.draw(screen)
 
     clock.tick(60)
     if counter == 0:
