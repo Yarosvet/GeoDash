@@ -74,16 +74,14 @@ class Camera:
 platforms = pygame.sprite.Group()
 DieBlocks = pygame.sprite.Group()
 characters = pygame.sprite.Group()
-character = None
-cam = None
+cam = Camera()
 
 
-def build_level(file_name):
+def build_level(file_name, ignore_player=False):
     global platforms
     global DieBlocks
-    global character
     global characters
-    screen.fill((24, 23, 28))
+    screen.fill((31, 23, 28))
     pygame.mouse.set_visible(0)
     file = open(file_name)
     level_text = file.read().split('\n')
@@ -103,7 +101,7 @@ def build_level(file_name):
                 a = Sprite(DieBlocks, pygame.transform.scale(load_image('LSpike.png'), (BLOCK_SIZE, BLOCK_SIZE)))
             elif sym == '_':
                 a = Sprite(platforms, pygame.transform.scale(load_image('Platform.png'), (BLOCK_SIZE, BLOCK_SIZE)))
-            elif sym == '@':
+            elif sym == '@' and not ignore_player:
                 a = Sprite(characters, pygame.transform.scale(load_image('Character.png'), (BLOCK_SIZE, BLOCK_SIZE)))
                 character = a
             try:
@@ -113,6 +111,3 @@ def build_level(file_name):
             platforms.draw(screen)
             DieBlocks.draw(screen)
             characters.draw(screen)
-    global cam
-    cam = Camera()
-    cam.update(character)
