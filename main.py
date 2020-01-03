@@ -12,6 +12,10 @@ logo = Sprite(images, load_image("logo.png"))
 logo.update(185, 10)
 clock = pygame.time.Clock()
 counter = 0
+is_jumping = False
+jump_counter = 0
+JUMP_K = 5
+V = 4
 
 
 def define_character():
@@ -33,13 +37,34 @@ while True:
                     build_level('data/level_1.txt')
                     state = 'game'
     if state == 'game':
-        print(1)
-        #build_level('data/level_1.txt', True)
-        print(0)
+        screen.fill((31, 23, 28))
+        platforms.draw(screen)
+        DieBlocks.draw(screen)
         define_character()
-        character.update(character.rect.x + 1, character.rect.y)
+        character.update(character.rect.x + V, character.rect.y)
         # cam.apply(character)
+        if pygame.key.get_pressed()[32] or is_jumping:
+            jump_counter += 1
+            is_jumping = True
+            screen.fill((31, 23, 28))
+            platforms.draw(screen)
+            DieBlocks.draw(screen)
+            if jump_counter < 8:
+                character.update(character.rect.x, character.rect.y - 2*JUMP_K)
+            elif jump_counter < 15:
+                character.update(character.rect.x, character.rect.y - 1*JUMP_K)
+            elif jump_counter < 22:
+                character.update(character.rect.x, character.rect.y + 1*JUMP_K)
+            elif jump_counter < 30:
+                character.update(character.rect.x, character.rect.y + 2*JUMP_K)
+            elif jump_counter >= 30:
+                is_jumping = False
+                jump_counter = 0
+
+
+
         characters.draw(screen)
+
 
     clock.tick(60)
     if counter == 0:
