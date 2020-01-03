@@ -68,7 +68,7 @@ class Camera:
     # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2 - 120)
 
 
 platforms = pygame.sprite.Group()
@@ -111,3 +111,4 @@ def build_level(file_name, ignore_player=False):
             platforms.draw(screen)
             DieBlocks.draw(screen)
             characters.draw(screen)
+    return len(level_text[0]) * BLOCK_SIZE
