@@ -68,32 +68,42 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2 - 120)
 
 
+# Переменные и константы
 size = width, height = 800, 500
-screen = pygame.display.set_mode(size)
-BLOCK_SIZE = 50
-state = 'logo'
-images = pygame.sprite.Group()
-background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
-play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
-logo = Sprite(images, load_image("logo.png"))
-logo.update(185, 10)
 clock = pygame.time.Clock()
 counter = 0
+LEVEL_MUSIC = "data/BackOnTrack.mp3"
+BLOCK_SIZE = 50
 is_jumping = False
 jump_counter = 0
 JUMP_K = 5
 K_FALL = 4
 V = 4
+FPS = 60
 pos_character = 0
 dead = False
 
+# Группы спрайтов и объекты
+images = pygame.sprite.Group()
 platforms = pygame.sprite.Group()
 DieBlocks = pygame.sprite.Group()
 characters = pygame.sprite.Group()
 character = None
 cam = Camera()
 
+# Инициализация игры
+screen = pygame.display.set_mode(size)
+state = 'logo'
+background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
+play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
+logo = Sprite(images, load_image("logo.png"))
+logo.update(185, 10)
+pygame.mixer.init()
+pygame.mixer.music.load('data/menuLoop.mp3')
+pygame.mixer.music.play(-1)
 
+
+# Чтобы построить уровень по карте
 def build_level(file_name):
     global platforms
     global DieBlocks
@@ -134,6 +144,7 @@ def build_level(file_name):
     return len(level_text[0]) * BLOCK_SIZE
 
 
+# Главный игровой цикл
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -142,6 +153,7 @@ while True:
         elif state == 'logo':
             if event.type == pygame.MOUSEBUTTONUP and event.button in [1, 2]:
                 if play.rect.collidepoint(*event.pos):
+                    # Переход в игру
                     for spr in images:
                         spr.kill()
                     is_jumping = False
@@ -153,22 +165,30 @@ while True:
                         character = None
                         cam = Camera()
                     len_level = build_level('data/level_1.txt')
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.load(LEVEL_MUSIC)
+                    pygame.mixer.music.play(-1)
                     state = 'game'
     if state == 'game':
+        # Движение персонажа
         character.update(character.rect.x + V, character.rect.y)
         pos_character += V
+        # Прыжки
         if pygame.key.get_pressed()[32] or pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2] or is_jumping:
             jump_counter += 1
             is_jumping = True
             screen.fill((31, 23, 28))
+            # Вверх
             if jump_counter < 8:
                 character.update(character.rect.x, character.rect.y - 2 * JUMP_K)
             elif jump_counter < 15:
                 character.update(character.rect.x, character.rect.y - 0.9 * JUMP_K)
+            # Вниз
             elif jump_counter < 22 and not pygame.sprite.spritecollideany(character, platforms):
                 character.update(character.rect.x, character.rect.y + 0.9 * JUMP_K)
             elif jump_counter < 29 and not pygame.sprite.spritecollideany(character, platforms):
                 character.update(character.rect.x, character.rect.y + 2 * JUMP_K)
+            # Конец прыжка
             if jump_counter == 29:
                 is_jumping = False
                 jump_counter = 0
@@ -176,9 +196,8 @@ while True:
                         not pygame.sprite.spritecollideany(character, DieBlocks):
                     character.update(character.rect.x, character.rect.y + 2)
         # Проверка свободного падения
-        if not pygame.sprite.spritecollideany(character,
-                                              platforms) and not is_jumping and not pygame.sprite.spritecollideany(
-            character, DieBlocks):
+        if not pygame.sprite.spritecollideany(character, platforms) and not is_jumping and \
+                not pygame.sprite.spritecollideany(character, DieBlocks):
             character.update(character.rect.x, character.rect.y + K_FALL)
         # Проверка смерти или конца игры
         if pygame.sprite.spritecollideany(character,
@@ -193,6 +212,9 @@ while True:
             pygame.display.flip()
             state = 'logo'
             dead = True
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load('data/menuLoop.mp3')
+            pygame.mixer.music.play(-1)
             continue
         # Обновление камеры
         if not is_jumping:
@@ -202,13 +224,13 @@ while True:
             cam.apply(spr)
         for spr in DieBlocks:
             cam.apply(spr)
-        # Обновление экрана
+        # Обновление экрана в игре
         screen.fill((31, 23, 28))
         platforms.draw(screen)
         DieBlocks.draw(screen)
         characters.draw(screen)
 
-    clock.tick(60)
+    clock.tick(FPS)
     if counter == 0:
         play.update()
         images.draw(screen)
