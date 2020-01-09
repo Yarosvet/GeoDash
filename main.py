@@ -82,9 +82,10 @@ counter = 0
 is_jumping = False
 jump_counter = 0
 JUMP_K = 5
+K_FALL = 4
 V = 4
-start_character_pos = (0, 0)
 pos_character = 0
+dead = False
 
 platforms = pygame.sprite.Group()
 DieBlocks = pygame.sprite.Group()
@@ -99,7 +100,6 @@ def build_level(file_name):
     global characters
     global character
     global pos_character
-    global start_character_pos
     screen.fill((31, 23, 28))
     pygame.mouse.set_visible(0)
     file = open(file_name)
@@ -124,7 +124,6 @@ def build_level(file_name):
                 a = Sprite(characters, pygame.transform.scale(load_image('Character.png'), (BLOCK_SIZE, BLOCK_SIZE)))
                 character = a
                 pos_character = sym_num * BLOCK_SIZE
-                start_character_pos = (pos_character, line_num * BLOCK_SIZE)
             try:
                 a.update(sym_num * BLOCK_SIZE, line_num * BLOCK_SIZE)
             except:
@@ -145,17 +144,15 @@ while True:
                 if play.rect.collidepoint(*event.pos):
                     for spr in images:
                         spr.kill()
-                    if not platforms and not DieBlocks and not characters:
-                        len_level = build_level('data/level_1.txt')
-                    else:
-                        is_jumping = False
-                        screen.fill((31, 23, 28))
-                        platforms.draw(screen)
-                        DieBlocks.draw(screen)
-                        # start_character_pos = (
-                        # start_character_pos[0] - BLOCK_SIZE, start_character_pos[1] - BLOCK_SIZE)  # Костыль
-                        character.update(*start_character_pos)
-                        characters.draw(screen)
+                    is_jumping = False
+                    jump_counter = 0
+                    if dead:
+                        platforms = pygame.sprite.Group()
+                        DieBlocks = pygame.sprite.Group()
+                        characters = pygame.sprite.Group()
+                        character = None
+                        cam = Camera()
+                    len_level = build_level('data/level_1.txt')
                     state = 'game'
     if state == 'game':
         character.update(character.rect.x + V, character.rect.y)
@@ -168,22 +165,24 @@ while True:
                 character.update(character.rect.x, character.rect.y - 2 * JUMP_K)
             elif jump_counter < 15:
                 character.update(character.rect.x, character.rect.y - 0.9 * JUMP_K)
-            elif jump_counter < 22:
+            elif jump_counter < 22 and not pygame.sprite.spritecollideany(character, platforms):
                 character.update(character.rect.x, character.rect.y + 0.9 * JUMP_K)
-            elif jump_counter < 29:
+            elif jump_counter < 29 and not pygame.sprite.spritecollideany(character, platforms):
                 character.update(character.rect.x, character.rect.y + 2 * JUMP_K)
-            if jump_counter == 60:
+            if jump_counter == 29:
                 is_jumping = False
                 jump_counter = 0
                 if not pygame.sprite.spritecollideany(character, platforms) and not is_jumping and \
                         not pygame.sprite.spritecollideany(character, DieBlocks):
                     character.update(character.rect.x, character.rect.y + 2)
+        # Проверка свободного падения
         if not pygame.sprite.spritecollideany(character,
                                               platforms) and not is_jumping and not pygame.sprite.spritecollideany(
             character, DieBlocks):
-            character.update(character.rect.x, character.rect.y + 1)
+            character.update(character.rect.x, character.rect.y + K_FALL)
+        # Проверка смерти или конца игры
         if pygame.sprite.spritecollideany(character,
-                                          DieBlocks) or pos_character >= len_level:  # Проверка смерти игрока или конца игры
+                                          DieBlocks) or pos_character >= len_level:
             screen.fill((0, 0, 0))
             background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
             play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
@@ -193,6 +192,7 @@ while True:
             pygame.mouse.set_visible(1)
             pygame.display.flip()
             state = 'logo'
+            dead = True
             continue
         # Обновление камеры
         if not is_jumping:
