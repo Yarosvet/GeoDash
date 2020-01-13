@@ -98,9 +98,31 @@ background = Sprite(images, pygame.transform.scale(load_image("menu_background.p
 play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
 logo = Sprite(images, load_image("logo.png"))
 logo.update(185, 10)
+# Музыка
 pygame.mixer.init()
 pygame.mixer.music.load('data/menuLoop.mp3')
 pygame.mixer.music.play(-1)
+
+
+def death():
+    global background
+    global play
+    global state
+    global dead
+    screen.fill((0, 0, 0))
+    background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
+    play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
+    logo = Sprite(images, load_image("logo.png"))
+    logo.update(185, 10)
+    images.draw(screen)
+    pygame.mouse.set_visible(1)
+    pygame.display.flip()
+    state = 'logo'
+    dead = True
+    # Музыка в лого
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load('data/menuLoop.mp3')
+    pygame.mixer.music.play(-1)
 
 
 # Чтобы построить уровень по карте
@@ -165,6 +187,7 @@ while True:
                         character = None
                         cam = Camera()
                     len_level = build_level('data/level_1.txt')
+                    # Музыка на уровне
                     pygame.mixer.music.stop()
                     pygame.mixer.music.load(LEVEL_MUSIC)
                     pygame.mixer.music.play(-1)
@@ -181,7 +204,7 @@ while True:
             # Вверх
             if jump_counter < 8:
                 character.update(character.rect.x, character.rect.y - 2 * JUMP_K)
-            elif jump_counter < 15:
+            elif jump_counter < 15 and not pygame.sprite.spritecollideany(character, platforms):
                 character.update(character.rect.x, character.rect.y - 0.9 * JUMP_K)
             # Вниз
             elif jump_counter < 22 and not pygame.sprite.spritecollideany(character, platforms):
@@ -199,22 +222,16 @@ while True:
         if not pygame.sprite.spritecollideany(character, platforms) and not is_jumping and \
                 not pygame.sprite.spritecollideany(character, DieBlocks):
             character.update(character.rect.x, character.rect.y + K_FALL)
+        # Проверка столкновения с платформами
+        else:
+            for spr in pygame.sprite.spritecollide(character, platforms, False):
+                if character.rect.x + character.rect.width >= spr.rect.x and character.rect.y + character.rect.height >= spr.rect.y + 8:
+                    print(character.rect.y + character.rect.height, spr.rect.y + 8)
+                    death()
         # Проверка смерти или конца игры
         if pygame.sprite.spritecollideany(character,
                                           DieBlocks) or pos_character >= len_level:
-            screen.fill((0, 0, 0))
-            background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
-            play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
-            logo = Sprite(images, load_image("logo.png"))
-            logo.update(185, 10)
-            images.draw(screen)
-            pygame.mouse.set_visible(1)
-            pygame.display.flip()
-            state = 'logo'
-            dead = True
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load('data/menuLoop.mp3')
-            pygame.mixer.music.play(-1)
+            death()
             continue
         # Обновление камеры
         if not is_jumping:
