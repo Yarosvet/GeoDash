@@ -151,7 +151,9 @@ def build_level(file_name):
             elif sym == '<':
                 a = Sprite(DieBlocks, pygame.transform.scale(load_image('LSpike.png'), (BLOCK_SIZE, BLOCK_SIZE)))
             elif sym == '_':
-                a = Sprite(platforms, pygame.transform.scale(load_image('Platform.png'), (BLOCK_SIZE, BLOCK_SIZE)))
+                a = Sprite(platforms, pygame.transform.scale(load_image('Platform.png'), (BLOCK_SIZE, BLOCK_SIZE // 2)))
+                a.update(sym_num * BLOCK_SIZE, line_num * BLOCK_SIZE + (BLOCK_SIZE // 2))
+                continue
             elif sym == '@':
                 a = Sprite(characters, pygame.transform.scale(load_image('Character.png'), (BLOCK_SIZE, BLOCK_SIZE)))
                 character = a
@@ -180,6 +182,7 @@ while True:
                         spr.kill()
                     is_jumping = False
                     jump_counter = 0
+
                     if dead:
                         platforms = pygame.sprite.Group()
                         DieBlocks = pygame.sprite.Group()
@@ -197,7 +200,9 @@ while True:
         character.update(character.rect.x + V, character.rect.y)
         pos_character += V
         # Прыжки
-        if pygame.key.get_pressed()[32] or pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2] or is_jumping:
+        if is_jumping or (
+                pygame.key.get_pressed()[32] or pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]) \
+                and pygame.sprite.spritecollideany(character, platforms):
             jump_counter += 1
             is_jumping = True
             screen.fill((31, 23, 28))
@@ -208,11 +213,13 @@ while True:
                 character.update(character.rect.x, character.rect.y - 0.9 * JUMP_K)
             # Вниз
             elif jump_counter < 22 and not pygame.sprite.spritecollideany(character, platforms):
+                print(3)
                 character.update(character.rect.x, character.rect.y + 0.9 * JUMP_K)
             elif jump_counter < 29 and not pygame.sprite.spritecollideany(character, platforms):
+                print(4)
                 character.update(character.rect.x, character.rect.y + 2 * JUMP_K)
             # Конец прыжка
-            if jump_counter == 29:
+            else:
                 is_jumping = False
                 jump_counter = 0
                 if not pygame.sprite.spritecollideany(character, platforms) and not is_jumping and \
@@ -225,8 +232,8 @@ while True:
         # Проверка столкновения с платформами
         else:
             for spr in pygame.sprite.spritecollide(character, platforms, False):
-                if character.rect.x + character.rect.width >= spr.rect.x and character.rect.y + character.rect.height >= spr.rect.y + 8:
-                    print(character.rect.y + character.rect.height, spr.rect.y + 8)
+                if character.rect.x + character.rect.width >= spr.rect.x and \
+                        character.rect.y + character.rect.height >= spr.rect.y + 8:
                     death()
         # Проверка смерти или конца игры
         if pygame.sprite.spritecollideany(character,
@@ -234,8 +241,7 @@ while True:
             death()
             continue
         # Обновление камеры
-        if not is_jumping:
-            cam.update(character)
+        cam.update(character)
         cam.apply(character)
         for spr in platforms:
             cam.apply(spr)
