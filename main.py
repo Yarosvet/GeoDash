@@ -213,10 +213,8 @@ while True:
                 character.update(character.rect.x, character.rect.y - 0.9 * JUMP_K)
             # Вниз
             elif jump_counter < 22 and not pygame.sprite.spritecollideany(character, platforms):
-                print(3)
                 character.update(character.rect.x, character.rect.y + 0.9 * JUMP_K)
             elif jump_counter < 29 and not pygame.sprite.spritecollideany(character, platforms):
-                print(4)
                 character.update(character.rect.x, character.rect.y + 2 * JUMP_K)
             # Конец прыжка
             else:
