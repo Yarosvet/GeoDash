@@ -25,6 +25,7 @@ images = pygame.sprite.Group()
 platforms = pygame.sprite.Group()
 DieBlocks = pygame.sprite.Group()
 characters = pygame.sprite.Group()
+level_menu = pygame.sprite.Group()
 character = None
 cam = Camera(width, height)
 
@@ -46,6 +47,8 @@ def death():
     global play
     global state
     global dead
+    for spr in level_menu:
+        spr.kill()
     screen.fill((0, 0, 0))
     background = Sprite(images, pygame.transform.scale(load_image("menu_background.png"), size))
     play = AnimatedSprite(images, load_image("play.png"), 1, 2, 310, 290)
@@ -114,24 +117,36 @@ while True:
         elif state == 'logo':
             if event.type == pygame.MOUSEBUTTONUP and event.button in [1, 2]:
                 if play.rect.collidepoint(*event.pos):
-                    # Переход в игру
-                    for spr in images:
-                        spr.kill()
-                    is_jumping = False
-                    jump_counter = 0
-
-                    if dead:
-                        platforms = pygame.sprite.Group()
-                        DieBlocks = pygame.sprite.Group()
-                        characters = pygame.sprite.Group()
-                        character = None
-                        cam = Camera(width, height)
+                    play.kill()
+                    logo.kill()
+                    # Меню уровней
+                    first = Sprite(level_menu, pygame.transform.scale(load_image("1.png"), (155, 135)))
+                    first.update(265, 235)
+                    second = Sprite(level_menu, pygame.transform.scale(load_image("2.png"), (100, 100)))
+                    second.update(550, 250)
+                    level_menu.draw(screen)
+                    state = 'level_menu'
+        elif state == 'level_menu':
+            if event.type == pygame.MOUSEBUTTONUP and event.button in [1, 2] and \
+                    (first.rect.collidepoint(*event.pos) or second.rect.collidepoint(*event.pos)):
+                # Переход в игру
+                is_jumping = False
+                jump_counter = 0
+                if dead:
+                    platforms = pygame.sprite.Group()
+                    DieBlocks = pygame.sprite.Group()
+                    characters = pygame.sprite.Group()
+                    character = None
+                    cam = Camera(width, height)
+                if first.rect.collidepoint(*event.pos):
                     len_level = build_level('data/level_1.txt')
-                    # Музыка на уровне
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.load(LEVEL_MUSIC)
-                    pygame.mixer.music.play(-1)
-                    state = 'game'
+                elif second.rect.collidepoint(*event.pos):
+                    len_level = build_level('data/level_2.txt')
+                # Музыка на уровне
+                pygame.mixer.music.stop()
+                pygame.mixer.music.load(LEVEL_MUSIC)
+                pygame.mixer.music.play(-1)
+                state = 'game'
     if state == 'game':
         # Движение персонажа
         character.update(character.rect.x + V, character.rect.y)
@@ -189,9 +204,10 @@ while True:
         characters.draw(screen)
 
     clock.tick(FPS)
-    if counter == 0:
+    if counter == 0 and state == 'logo' or state == 'level_menu':
         play.update()
         images.draw(screen)
+        level_menu.draw(screen)
     pygame.display.flip()
     counter += 1
     counter = counter % 10
