@@ -175,6 +175,9 @@ while True:
                 if not pygame.sprite.spritecollideany(character, platforms) and not is_jumping and \
                         not pygame.sprite.spritecollideany(character, DieBlocks):
                     character.update(character.rect.x, character.rect.y + 2)
+            # Предохранение от бага пересечения кубика при приземлении на платформу
+            while 21 < jump_counter and pygame.sprite.spritecollideany(character, platforms):
+                character.update(character.rect.x, character.rect.y - 0.1)
         # Проверка свободного падения
         if not pygame.sprite.spritecollideany(character, platforms) and not is_jumping and \
                 not pygame.sprite.spritecollideany(character, DieBlocks):
