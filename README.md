@@ -4,7 +4,7 @@
 
 My first game in *pygame*, I tried to rewrite Geometry Dash in Python.
 # Run
-```
+```bash
 pip3 install -r requirements.txt
 python3 main.py
 ```
